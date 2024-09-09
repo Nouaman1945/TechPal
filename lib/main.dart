@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; // Import Firebase Core
 import 'package:fitness_app/screens/splash/splash_screen.dart';
 
-void main() {
+void main() async {
+  // Ensure that Firebase is initialized before running the app
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); // Initialize Firebase
   runApp(const MyApp());
 }
 
@@ -16,10 +20,6 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.light,
       ),
-      // darkTheme: ThemeData(
-      //   brightness: Brightness.dark,
-      // ),
-
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
     );

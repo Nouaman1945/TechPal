@@ -1,7 +1,9 @@
 // lib/screens/onboarding_screen.dart
 import 'package:fitness_app/screens/onboarding/OnboardingScreen.dart';
 import 'package:flutter/material.dart';
-import 'pathSelection.dart'; // Assurez-vous que le chemin est correct
+
+import '../../Login  Sign up/login_screen.dart';
+
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -26,10 +28,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 _currentPage = index;
               });
             },
-            children: const [
+            children: [
               OnboardingContent(
                 description:
-                    'Welcome to our fitness app! Get started on your journey.',
+                'Welcome to our fitness app! Get started on your journey.',
                 image: 'images/6.jpg',
                 title1: 'Welcome ',
                 title2: 'to MyApp',
@@ -38,7 +40,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               OnboardingContent(
                 description:
-                    'Begin your fitness adventure as a Client! Access personalized workout plans, work with certified coaches, track your progress, and stay motivated with live sessions.',
+                'Begin your fitness adventure as a Client! Access personalized workout plans, work with certified coaches, track your progress, and stay motivated with live sessions.',
                 image: 'images/4.jpg',
                 title1: 'Become a ',
                 title2: 'Client!',
@@ -47,15 +49,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               OnboardingContent(
                 description:
-                    'Grow your client base as a Coach! Create custom fitness programs, host live training sessions, and build your professional brand in a thriving community.',
+                'Grow your client base as a Coach! Create custom fitness programs, host live training sessions, and build your professional brand in a thriving community.',
                 image: 'images/5.jpg',
                 title1: 'Join us as a ',
                 title2: 'Coach!',
                 backgroundColor: Colors.white,
                 textColor: Colors.black,
               ),
-
-              PathSelectionScreen(), // This remains as it is since it requires different content
+              LoginScreen(), // Replaced PathSelectionScreen with LoginScreen
             ],
           ),
           Positioned(
@@ -68,7 +69,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Row(
                   children: List.generate(
                     4,
-                    (index) => AnimatedContainer(
+                        (index) => AnimatedContainer(
                       duration: const Duration(milliseconds: 250),
                       width: _currentPage == index ? 30 : 8,
                       height: 8,
