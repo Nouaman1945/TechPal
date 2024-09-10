@@ -66,7 +66,7 @@ class _LandingPageState extends State<LandingPage> {
               return const Text('Error');
             } else if (snapshot.hasData) {
               final userData = snapshot.data!.data() as Map<String, dynamic>;
-              final userName = userData['fullName'] ?? 'User';
+              final userName = userData['fullname'] ?? 'User';
               return Text('Welcome, $userName');
             } else {
               return const Text('User Not Found');
