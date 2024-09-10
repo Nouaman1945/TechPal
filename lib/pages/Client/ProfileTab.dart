@@ -107,7 +107,7 @@ class _ProfileTabState extends State<ProfileTab> {
               ),
             ),
             const SizedBox(height: 10),
-
+//data display in coach and client profile
             // Bio or Goal
             Text(
               _userData?['goal'] ?? 'Your Fitness Goal',
