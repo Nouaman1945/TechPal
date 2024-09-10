@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../pages/Coach/CoachLandingPage.dart';
+import '../pages/Client/LandingPage.dart';
 import 'SignUpScreen.dart'; // Ensure this path is correct
 
 class LoginScreen extends StatefulWidget {
@@ -15,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   bool _isLoading = false;
+  bool _obscurePassword = true;
   String _errorMessage = '';
 
   Future<void> _login() async {
@@ -30,7 +34,11 @@ class _LoginScreenState extends State<LoginScreen> {
       await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
+
       );
+
+      // Check user's role (Client or Coach) and redirect accordingly
+      await _checkUserRole(email);
     } on FirebaseAuthException catch (e) {
       setState(() {
         _isLoading = false;
@@ -46,6 +54,43 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     }
   }
+
+  Future<void> _checkUserRole(String email) async {
+    // Check if the email exists in the 'clients' collection
+    final clientDocs = await FirebaseFirestore.instance
+        .collection('clients')
+        .where('email', isEqualTo: email)
+        .get();
+
+    if (clientDocs.docs.isNotEmpty) {
+      // Redirect to Client landing page
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => LandingPage()),
+      );
+    } else {
+      // Check if the email exists in the 'coaches' collection
+      final coachDocs = await FirebaseFirestore.instance
+          .collection('coaches')
+          .where('email', isEqualTo: email)
+          .get();
+
+      if (coachDocs.docs.isNotEmpty) {
+        // Redirect to Coach landing page
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => CoachLandingPage()),
+        );
+      } else {
+        // Handle scenario where user is not found in either collection
+        setState(() {
+          _errorMessage = 'User not found in Client or Coach collection.';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_errorMessage)),
+        );
+      }
+    }
+  }
+
 
   String _getErrorMessage(String errorCode) {
     switch (errorCode) {
@@ -100,11 +145,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _passwordController,
                         hintText: "Password",
                         icon: Icons.lock,
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         suffixIcon: IconButton(
-                          icon: Icon(Icons.visibility_off),
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          ),
                           onPressed: () {
-
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
                           },
                         ),
                       ),
@@ -227,22 +276,40 @@ class _LoginScreenState extends State<LoginScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildSocialButton("assets/images/icons8-google.svg"),
+        _buildSocialButton(
+          iconUrl: "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg",
+          iconColor: Colors.red, // Example color, adjust as needed
+        ),
         SizedBox(width: 20),
-        _buildSocialButton("assets/images/icons8-facebook.svg"),
+        _buildSocialButton(
+          iconUrl: "https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg",
+          iconColor: Colors.blue, // Example color, adjust as needed
+        ),
       ],
     );
   }
 
-  Widget _buildSocialButton(String assetPath) {
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black.withOpacity(0.1)),
+  Widget _buildSocialButton({required String iconUrl, required Color iconColor}) {
+    return InkWell(
+      onTap: () {
+        // Add functionality for social login here
+      },
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.black.withOpacity(0.1)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Image.network(
+            iconUrl,
+            color: iconColor,
+            fit: BoxFit.contain,
+          ),
+        ),
       ),
-
     );
   }
 }

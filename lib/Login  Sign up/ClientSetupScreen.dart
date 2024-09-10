@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../pages/Client/LandingPage.dart';
 import '../screens/onboarding/pathSelection.dart';
 
 class ClientSetupScreen extends StatefulWidget {
@@ -16,6 +17,7 @@ class _ClientSetupScreenState extends State<ClientSetupScreen> {
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _goalController = TextEditingController();
   String? _selectedGender;
+  DateTime _selectedBirthday = DateTime.now();
   bool _isLoading = false;
 
   @override
@@ -71,6 +73,8 @@ class _ClientSetupScreenState extends State<ClientSetupScreen> {
                   const Color(0xFFDF6D00),
                   TextInputType.number,
                 ),
+                const SizedBox(height: 20),
+                _buildBirthdayPicker(),
                 const SizedBox(height: 20),
                 _buildGenderDropdown(),
                 const SizedBox(height: 20),
@@ -155,6 +159,42 @@ class _ClientSetupScreenState extends State<ClientSetupScreen> {
     );
   }
 
+  Widget _buildBirthdayPicker() {
+    return GestureDetector(
+      onTap: _selectBirthday,
+      child: AbsorbPointer(
+        child: TextFormField(
+          decoration: InputDecoration(
+            labelText: 'Birthday',
+            labelStyle: const TextStyle(color: Colors.black),
+            border: OutlineInputBorder(
+              borderSide: BorderSide(color: const Color(0xFFDF6D00)),
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          controller: TextEditingController(
+            text: '${_selectedBirthday.day}/${_selectedBirthday.month}/${_selectedBirthday.year}',
+          ),
+          validator: (value) => value == null || value.isEmpty ? 'Please select your birthday' : null,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectBirthday() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedBirthday,
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedBirthday) {
+      setState(() {
+        _selectedBirthday = picked;
+      });
+    }
+  }
+
   Future<void> _submitData() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -169,27 +209,23 @@ class _ClientSetupScreenState extends State<ClientSetupScreen> {
       }
 
       final clientData = {
-        'createdAt': Timestamp.now(),
-        'email': user.email,
-        'fullName': _fullNameController.text,
-        'status': 'active',
-        'updatedAt': Timestamp.now(),
-        'userID': user.uid,
-        'age': _ageController.text,
-        'gender': _selectedGender,
+        'age': int.tryParse(_ageController.text) ?? 0,
+        'birthday': Timestamp.fromDate(_selectedBirthday),
+        'email': user.email ?? '',
+        'fullname': _fullNameController.text,
+        'gender': _selectedGender ?? '',
         'goal': _goalController.text,
       };
 
       await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
           .collection('clients')
           .doc(user.uid)
           .set(clientData);
 
+      // Redirect to LandingPage
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const PathSelectionScreen()),
+        MaterialPageRoute(builder: (context) => const LandingPage()),
       );
     } catch (e) {
       setState(() {

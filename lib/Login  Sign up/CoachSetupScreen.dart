@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../pages/Coach/CoachLandingPage.dart';
 import '../screens/onboarding/pathSelection.dart';
 
 class CoachSetupScreen extends StatefulWidget {
@@ -15,10 +16,11 @@ class _CoachSetupScreenState extends State<CoachSetupScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _bioController = TextEditingController();
   final TextEditingController _certificationsController = TextEditingController();
   final TextEditingController _pricingController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  DateTime _selectedBirthday = DateTime.now();
   String? _selectedActivityId;
   bool _isLoading = false;
 
@@ -35,7 +37,7 @@ class _CoachSetupScreenState extends State<CoachSetupScreen> {
               MaterialPageRoute(builder: (context) => const PathSelectionScreen()),
             );
           },
-        ), // Removes the back button
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -78,21 +80,6 @@ class _CoachSetupScreenState extends State<CoachSetupScreen> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _bioController,
-                  decoration: const InputDecoration(
-                    labelText: 'Bio',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a bio';
                     }
                     return null;
                   },
@@ -146,7 +133,39 @@ class _CoachSetupScreenState extends State<CoachSetupScreen> {
                   },
                 ),
                 const SizedBox(height: 20),
-                // You may want to implement a dropdown or other selection for Activity ID
+                TextFormField(
+                  controller: _cityController,
+                  decoration: const InputDecoration(
+                    labelText: 'City',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your city';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                // Date Picker for Birthday
+                Text('Birthday: ${_selectedBirthday.toLocal().toString().split(' ')[0]}'),
+                ElevatedButton(
+                  onPressed: () async {
+                    final selectedDate = await showDatePicker(
+                      context: context,
+                      initialDate: _selectedBirthday,
+                      firstDate: DateTime(1900),
+                      lastDate: DateTime.now(),
+                    );
+                    if (selectedDate != null && selectedDate != _selectedBirthday) {
+                      setState(() {
+                        _selectedBirthday = selectedDate;
+                      });
+                    }
+                  },
+                  child: const Text('Select Date'),
+                ),
+                const SizedBox(height: 20),
                 DropdownButtonFormField<String>(
                   decoration: const InputDecoration(
                     labelText: 'Activity',
@@ -206,29 +225,27 @@ class _CoachSetupScreenState extends State<CoachSetupScreen> {
       }
 
       final coachData = {
-        'createdAt': Timestamp.now(),
-        'email': _emailController.text,
         'fullName': _fullNameController.text,
-        'status': 'active',
-        'updatedAt': Timestamp.now(),
-        'userID': user.uid,
+        'activityID': FirebaseFirestore.instance.collection('activities').doc(_selectedActivityId),
         'age': int.tryParse(_ageController.text) ?? 0,
-        'activityID': _selectedActivityId, // Reference to the activity
-        'bio': _bioController.text,
+        'birthday': Timestamp.fromDate(_selectedBirthday),
         'certifications': _certificationsController.text,
-        'pricing': _pricingController.text,
-        'emailRef': user.uid, // Reference to the user document
-        'fullnameRef': user.uid, // Reference to the user document
+        'city': _cityController.text,
+        'email': _emailController.text,
+        'pricing': int.tryParse(_pricingController.text) ?? 0,
       };
 
       await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
           .collection('coaches')
           .doc(user.uid)
           .set(coachData);
 
-      Navigator.of(context).pop(); // Navigate back or to another screen
+      // Navigate to CoachLandingPage after successful setup
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => CoachLandingPage(), // Ensure this page is correctly imported
+        ),
+      );
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -253,4 +270,5 @@ class _CoachSetupScreenState extends State<CoachSetupScreen> {
       });
     }
   }
+
 }
